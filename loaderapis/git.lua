@@ -18,21 +18,27 @@ function git:loadPackage(repo, pack, version, filepath)
 	if not version.cloned then
 		local gitBranch = ""
 		if version.branch then
-			gitBranch = string.format("\"--branch=%s\"", version.branch)
+			if version.commit then
+				gitBranch = string.format("\"--branch=%s\"", version.branch)
+			else
+				gitBranch = string.format("--depth=1 \"--branch=%s\"", version.branch)
+			end
 		end
 		
-		if not os.executef("git clone --depth=1 %s \"%s\" \"%s\"", gitBranch, filepath, version.fullPath) then
+		if not os.executef("git clone %s \"%s\" \"%s\"", gitBranch, filepath, version.fullPath) then
 			error(string.format("Failed to clone package '%s' version '%s'", pack.name, version.name))
+		end
+		
+		if version.commit then
+			if not os.executef("git -C %q checkout %s", version.fullPath, version.commit) then
+				error(string.format("Failed to checkout commit '%s' package '%s' version '%s'", verison.commit, pack.name, version.name))
+			end
 		end
 		
 		if version.apply_patch then
 			if not os.executef("git -C \"%s\" am -q --no-gpg-sign \"%s/patches/%s-%s-%s.patch\"", version.fullPath, repo.dir, prefix, pack.name, version.name) then
 				error(string.format("Failed to apply patch for package '%s' version '%s'", pack.name, version.name))
 			end
-		end
-	else
-		if not os.executef("git -C \"%s\" pull -q", version.fullPath) then
-			error(string.format("Failed to update package '%s' version '%s'", pack.name, version.name))
 		end
 	end
 end
