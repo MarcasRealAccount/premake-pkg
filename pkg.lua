@@ -50,6 +50,7 @@ function pkg:requirePackage(pack)
 		return
 	end
 	
+	self.currentlyBuildingPackage = { repo = repo, pack = packag, version = vers }
 	local loaderAPI, filepath = self:getLoaderAPI(vers.path)
 	loaderAPI:loadPackage(repo, packag, vers, filepath)
 	vers.loaded = true
@@ -61,12 +62,12 @@ function pkg:requirePackage(pack)
 	end
 	
 	if not vers.built then
-		self.currentlyBuildingPackage = { repo = repo, pack = packag, version = vers }
 		self:runBuildScript(repo, packag, vers)
 		io.writefile(string.format("%s/Bin/.built", vers.fullPath), "Built")
 		vers.built = true
 	end
 	self:runDepScript(repo, packag, vers)
+	self.currentlyBuildingPackage = { }
 end
 
 function pkgdeps(deps)

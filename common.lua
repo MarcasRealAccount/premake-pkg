@@ -265,6 +265,9 @@ function common:rmdir(dir)
 		return 1, "'" .. dir .. "' is not a directory!"
 	end
 
+	if self.host == "windows" then
+		os.executef("attrib -R -H -S %q /S /D", path.translate(path.normalize(realDir), "\\") .. "\\**")
+	end
 	local code, err = os.rmdir(realDir)
 	if not code then return -4, err end
 

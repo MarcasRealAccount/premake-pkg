@@ -15,7 +15,8 @@ function git:loadPackage(repo, pack, version, filepath)
 		local currentVersion = iif(file ~= nil, tonumber(file), version.patch_version)
 		version.cloned = currentVersion == version.patch_version
 		if not version.cloned then
-			common:rmdir(version.fullPath)
+			local code, err = common:rmdir(version.fullPath)
+			if code < 0 then pkg:pkgError(err) end
 		end
 	end
 	
