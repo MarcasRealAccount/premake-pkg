@@ -7,7 +7,7 @@ local github        = pkg.repoapis.github
 function github:updateRepo(repo, repoPath)
 	repo.dir = pkg.dir .. "/repos/github-" .. repoPath:gsub("/", "-") .. "/"
 	if os.isdir(repo.dir) then
-		-- Defo make better
+		-- TODO(MarcasRealAccount): Implement a way to prune a repository
 		repo.cloned = true
 	end
 	

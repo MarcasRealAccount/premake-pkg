@@ -59,6 +59,7 @@ function pkg:updateRepos()
 		return
 	end
 	self.reloadRepos = false
+	-- TODO(MarcasRealAccount): Implement a way to prune a repository
 	for _, repo in ipairs(self.repos) do
 		if not repo.updated then
 			pkg:updateRepo(repo)
@@ -92,7 +93,7 @@ end
 
 function pkg:getPkgVersion(pack, version)
 	if not version or version:len() == 0 then
-		version = pack.current_version
+		version = pack.latest_version
 	end
 	
 	for _, ver in ipairs(pack.versions) do
