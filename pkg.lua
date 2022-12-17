@@ -1,36 +1,27 @@
 local p   = premake
 local pkg = p.extensions.pkg
 
-function pkg:getVSInfo()
-	local info = {}
-	
-	local versionIdStr = os.outputof("\"C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe\" -prerelease -latest -property catalog_productLine"):match("%d+")
-	local versionStr   = os.outputof("\"C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe\" -prerelease -latest -property catalog_productLineVersion")
-	local versionId    = tonumber(versionIdStr)
-	local version      = tonumber(versionStr)
-	info.path      = os.outputof("\"C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe\" -prerelease -latest -property installationPath")
-	info.msbuild   = string.format("%s\\MSBuild\\Current\\Bin\\MSBuild.exe", info.path)
-	info.buildTool = string.format("Visual Studio %d %d", versionId, version)
-	function info:build(solution, configs)
-		for config, data in pairs(configs) do
-			if not os.executef("call %q -verbosity:minimal -p:Configuration=%s -m %q", path.translate(path.normalize(self.msbuild), "\\"), config, path.translate(path.normalize(solution), "\\")) then
-				error(string.format("Failed to build configuration %s of package %s", config, pkg.currentlyBuildingPackage.pack.name))
-			end
-			
-			local suffix = ""
-			if data.isStaticRT then
-				suffix = "-StaticRT"
-			end
-			common:copyFiles(data.path, data.outputFiles, string.format("%s/Bin/%s-%s-%s%s/", pkg.currentlyBuildingPackage.version.fullPath, common.host, common.arch, data.config, suffix))
-		end
-	end
-	return info
+function pkg:pkgError(msgFormat, ...)
+	error(string.format("%s for %s-%s", string.format(msgFormat, ...), self.currentlyBuildingPackage.pack.name, self.currentlyBuildingPackage.version.name))
 end
 
-function pkg:setupCMake(buildTool, dir, buildDir, args)
-	if not os.executef("cmake --log-level=ERROR -S %q -B %q -G %q %s", dir, buildDir, buildTool, args) then
-		error(string.format("Failed to run cmake for %s-%s", self.currentlyBuildingPackage.pack.name, self.currentlyBuildingPackage.version.name))
+function pkg:getGenericBuildTool(configs, buildDir)
+	local info = { ["configs"] = {} }
+	for _, config in ipairs(configs) do
+		info.configs[config] = {}
 	end
+	info.binDir   = string.format("%s/Bin/", self.currentlyBuildingPackage.version.fullPath)
+	info.buildDir = path.normalize(buildDir)
+	function info:mapConfigs(configMap)
+		for config, data in pairs(configMap) do
+			local cfg = self.configs[config]
+			cfg.data  = data
+		end
+	end
+	function info:cleanTemp()
+		common:rmdir(self.buildDir)
+	end
+	return info
 end
 
 function pkg:runBuildScript(repo, pack, version)
@@ -79,6 +70,10 @@ function pkg:requirePackage(pack)
 end
 
 function pkgdeps(deps)
+	if not common.fullSetup then
+		return
+	end
+
 	if type(deps) ~= "table" and type(deps) ~= "string" then
 		error("pkgdeps argument #1 has to be either a table of strings or a string")
 	end

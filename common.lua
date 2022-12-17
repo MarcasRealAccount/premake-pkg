@@ -186,13 +186,16 @@ function common:getScriptActionCommand(action)
 	end
 end
 
-function common:libName(names)
+function common:libName(names, withDebug)
 	if type(names) == "table" then
 		local libnames = {}
 
 		for _, v in ipairs(names) do
 			local libname = v
 			if self.target == "windows" then
+				if withDebug then
+					table.insert(libnames, libname .. ".pdb")
+				end
 				libname = libname .. ".lib"
 			else
 				libname = "lib" .. libname .. ".a"
@@ -202,7 +205,9 @@ function common:libName(names)
 
 		return libnames
 	else
-		return self:libName({ names })[1]
+		local libnames = self:libName({ names }, withDebug)
+		if #libnames == 1 then return libnames[1] end
+		return libnames
 	end
 end
 
@@ -296,15 +301,21 @@ function common:copyFile(from, to)
 end
 
 function common:copyFiles(from, filenames, to)
+	if type(filenames) ~= "table" then
+		filenames = { filenames }
+	end
 	local realFrom = self:normalizedPath(from) .. "/"
 	local realTo   = self:normalizedPath(to) .. "/"
 
+	local errors = {}
 	for _, v in ipairs(filenames) do
 		local code, err = self:copyFile(realFrom .. v, realTo .. v)
-		if code < 0 then return code, err end
+		if code < 0 then
+			table.insert(errors, { code, err })
+		end
 	end
 
-	return 0
+	return errors
 end
 
 function common:copyDir(from, to)
@@ -315,13 +326,16 @@ function common:copyDir(from, to)
 		return -1, "'" .. from .. "' is not a directory!"
 	end
 
+	local errors = {}
 	local matches = os.matchfiles(realFrom .. "**")
 	for _, v in ipairs(matches) do
 		code, err = self:copyFile(v, realTo .. path.getrelative(realFrom, v))
-		if code < 0 then return code, err end
+		if code < 0 then
+			table.insert(errors, { code, err })
+		end
 	end
 
-	return 0
+	return errors
 end
 
 local function toPremakeArch(name)
