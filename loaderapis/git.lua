@@ -11,7 +11,8 @@ function git:loadPackage(repo, pack, version, filepath)
 	end
 	version.fullPath = path.getabsolute(string.format("%ss/%s-%s", prefix, pack.name, version.name), repo.dir) .. "/"
 	if os.isdir(version.fullPath) then
-		local currentVersion = tonumber(io.readfile(string.format("%s/%s", version.fullPath, ".pkgpatchversion")))
+		local file = io.readfile(string.format("%s/%s", version.fullPath, ".pkgpatchversion"))
+		local currentVersion = iif(file ~= nil, tonumber(file), version.patch_version)
 		version.cloned = currentVersion == version.patch_version
 		if not version.cloned then
 			common:rmdir(version.fullPath)
