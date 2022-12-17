@@ -1,6 +1,18 @@
 local p   = premake
 local pkg = p.extensions.pkg
 
+newoption({
+	trigger     = "pkg-prune",
+	description = "Redownloads used repositories",
+	category    = "pkg"
+})
+
+newoption({
+	trigger     = "pkg-prune-full",
+	description = "Deletes all repositories first",
+	category    = "pkg"
+})
+
 function pkg:splitPkgName(name)
 	local index   = name:find("@", 1, true)
 	if not index then
@@ -59,7 +71,9 @@ function pkg:updateRepos()
 		return
 	end
 	self.reloadRepos = false
-	-- TODO(MarcasRealAccount): Implement a way to prune a repository
+	if _OPTIONS["pkg-prune-full"] then
+		common:rmdir(string.format("%s/repos/", self.dir))
+	end
 	for _, repo in ipairs(self.repos) do
 		if not repo.updated then
 			pkg:updateRepo(repo)
