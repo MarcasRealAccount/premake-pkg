@@ -1,6 +1,19 @@
 local p   = premake
 local pkg = p.extensions.pkg
 
+function pkg:formatString(fmt, replacements)
+	while true do
+		local i, j = fmt:find("%%{[^ \t\n}]*}")
+		if i == nil then
+			break
+		end
+
+		local replacementStr = fmt:sub(i + 2, j - 1)
+		fmt = fmt:sub(1, i - 1) .. (replacements[replacementStr] or "") .. fmt:sub(j + 1)
+	end
+	return fmt
+end
+
 function pkg:pkgError(msgFormat, ...)
 	error(string.format("%s for %s-%s", string.format(msgFormat, ...), self.currentlyBuildingPackage.pack.name, self.currentlyBuildingPackage.version.name))
 end

@@ -19,15 +19,16 @@ function pkg:getGMake(configs, buildDir)
 				if targets:len() > 0 then
 					targets = targets .. " "
 				end
-				targets = targets .. target
+				targets      = targets .. target
+				dat.fullPath = data.path .. pkg:formatString(self.pathFmt, { targetname = target, targetpath = dat.path, config = config })
 			end
 			
-			if not os.executef("make -C %q -j %s %s", data.path, targets, data.args) then
+			if not os.executef("make -C %q -j %s %s", data.path, targets, data.args or "") then
 				pkg:pkgError("Failed to build configuration '%s'", config)
 			end
 			
 			for target, dat in pairs(data.data.targets) do
-				common:copyFiles(string.format("%s/%s/", data.path, dat.path), dat.outputFiles, string.format("%s/%s-%s-%s/", self.binDir, common.host, common.arch, data.data.config))
+				common:copyFiles(dat.fullPath, dat.outputFiles, string.format("%s/%s-%s-%s/", self.binDir, common.host, common.arch, data.data.config))
 			end
 		end
 	end
