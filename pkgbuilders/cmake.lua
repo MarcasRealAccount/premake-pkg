@@ -12,13 +12,7 @@ function pkg:setupCMake(prjName, configs, dir, buildDir, args)
 			self:pkgError("Failed to run cmake")
 		end
 		buildTool:setSolution(buildDir .. prjName .. ".sln")
-
-		for _, config in ipairs(configs) do
-			local cfg = buildTool.configs[config]
-			for target, data in pairs(cfg.data.targets) do
-				data.fullPath = buildDir .. string.format("%s/%s", data.path, config)
-			end
-		end
+		buildTool.pathFmt = "%{targetpath}/%{config}"
 	else
 		buildTool = self:getGMake(configs, buildDir)
 		for _, config in ipairs(configs) do
@@ -27,12 +21,8 @@ function pkg:setupCMake(prjName, configs, dir, buildDir, args)
 				self:pkgError("Failed to run cmake in '%s'", config)
 			end
 			buildTool:setConfigPath(config, configPath)
-
-			local cfg = buildTool.configs[config]
-			for target, data in pairs(cfg.data.targets) do
-				data.fullPath = configPath .. target
-			end
 		end
+		buildTool.pathFmt = "%{targetpath}/"
 	end
 	return buildTool
 end
