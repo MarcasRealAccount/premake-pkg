@@ -19,4 +19,4 @@ After that it will invoke a dependency script which adds the output directory as
 There is also `pkgexts({})` which adds extensions. (These are handy to utilize in the [premake-system.lua](https://premake.github.io/docs/Locating-Scripts) file
 
 # How to use
-All you need to do is clone this github repository. Find the [premake-system.lua](https://premake.github.io/docs/Locating-Scripts) file and add `require(premake-pkg)`
+All you need to do is clone this github repository. Find the [premake-system.lua](https://premake.github.io/docs/Locating-Scripts) file and add `require("premake-pkg")`
