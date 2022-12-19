@@ -27,7 +27,7 @@ function pkg:isRepoVersionSupported(version)
 	
 	if version[1] > #self.supportedRepoVersions then return false end
 	
-	local maxMinor = self.supportedRepoVersions[version[1]]
+	local maxMinor = self.supportedRepoVersions[version[1] + 1]
 	if maxMinor == nil then return false end
 	if version[2] < 0 then return false end
 	return version[2] <= maxMinor
@@ -247,7 +247,7 @@ function pkg:updateRepo(repo)
 	repoapi:updateRepo(repo, repoPath)
 	repo.data = json.decode(io.readfile(string.format("%s/repo.json", repo.dir)))
 	if not self:isRepoVersionSupported(repo.data.version) then
-		error(string.format("'%s' uses version '%s' which is not supported", path, self:semVerToString(repo.data.version)))
+		error(string.format("'%s' uses version '%s' which is not supported", path, self:semverToString(repo.data.version)))
 	end
 	for _, extension in ipairs(repo.data.exts) do
 		extension.isExtension = true
