@@ -33,6 +33,14 @@ function pkg:isRepoVersionSupported(version)
 	return version[2] <= maxMinor
 end
 
+function pkg:isVersionGreater(a, b)
+	if a[1] < 0 or b[1] < 0 then return false end
+	if a[1] < b[1] then return true end
+	if a[2] < b[2] then return true end
+	if a[3] < b[3] then return true end
+	return false
+end
+
 function pkg:isVersionInRange(version, range)
 	if type(version) == "string" then
 		version = self:semver(version, false)
@@ -43,28 +51,91 @@ function pkg:isVersionInRange(version, range)
 	
 	if version[1] < 0 or range[1][1] < 0 or range[2][1] < 0 then return false end
 	
-	if range[1][4] == 0 then
-		-- Inclusive lower
-		if version[1] < range[1][1] then return false end
-		if version[2] < range[1][2] then return false end
-		if version[3] < range[1][3] then return false end
-	else
-		-- Exclusive lower
-		if version[1] <= range[1][1] then return false end
-		if version[2] <= range[1][2] then return false end
-		if version[3] <= range[1][3] then return false end
-	end
-	if range[2][4] == 0 then
-		-- Inclusive upper
-		if version[1] > range[2][1] then return false end
-		if version[2] > range[2][2] then return false end
-		if version[3] > range[2][3] then return false end
-	else
-		-- Exclusive upper
-		if version[1] >= range[2][1] then return false end
-		if version[2] >= range[2][2] then return false end
-		if version[3] >= range[2][3] then return false end
-	end
+	repeat
+		if range[1][4] == 0 then
+			-- Inclusive lower
+			if version[1] < range[1][1] then
+				return false
+			elseif version[1] > range[1][1] then
+				break
+			end
+			if version[2] < range[1][2] then
+				return false
+			elseif version[2] > range[1][2] then
+				break
+			end
+			if range[1][3] >= 0 then
+				if version[3] < range[1][3] then
+					return false
+				elseif version[3] > range[1][3] then
+					break
+				end
+			end
+		else
+			-- Exclusive lower
+			if version[1] < range[1][1] then
+				return false
+			elseif version[1] > range[1][1] then
+				break
+			end
+			if version[2] < range[1][2] then
+				return false
+			elseif version[2] > range[1][2] then
+				break
+			end
+			if range[1][3] >= 0 then
+				if version[3] < range[1][3] then
+					return false
+				elseif version[3] > range[1][3] then
+					break
+				end
+				return false
+			end
+		end
+	until true
+	repeat
+		if range[2][4] == 0 then
+			-- Inclusive upper
+			if version[1] > range[2][1] then
+				return false
+			elseif version[1] < range[2][1] then
+				break
+			end
+			if version[2] > range[2][2] then
+				return false
+			elseif version[2] < range[2][2] then
+				break
+			end
+			if range[2][3] >= 0 then
+				if version[3] > range[2][3] then
+					return false
+				elseif version[3] < range[2][3] then
+					break
+				end
+			end
+		else
+			-- Exclusive upper
+			if version[1] > range[2][1] then
+				return false
+			elseif version[1] < range[2][1] then
+				break
+			end
+			if version[2] > range[2][2] then
+				return false
+			elseif version[2] < range[2][2] then
+				break
+			end
+			if range[2][3] >= 0 then
+				if version[3] > range[2][3] then
+					return false
+				elseif version[3] < range[2][3] then
+					break
+				end
+				return false
+			end
+		end
+	until true
+	return true
 end
 
 function pkg:semver(version, allowString)
@@ -78,9 +149,14 @@ function pkg:semver(version, allowString)
 			end
 		end
 		
-		return { major, minor, patch }
+		return { tonumber(major), tonumber(minor), tonumber(patch) }
 	end
 	return { -1, 0, 0 }
+end
+
+function pkg:semverToString(version)
+	if type(version) == "string" then return version end
+	return string.format("%d.%d.%d", version[1], version[2], version[3])
 end
 
 function pkg:semverRange(range, allowString)
@@ -88,12 +164,31 @@ function pkg:semverRange(range, allowString)
 		local found, _, lbrack, lmajor, lminor, lpatch, umajor, uminor, upatch, ubrack = range:find("^([%(%[])(%d+)%.(%d+)%.?(%d*),(%d+)%.(%d+)%.?(%d*)([%)%]])$")
 		if not found then
 			local ver = self:semver(range, allowString)
+			if type(ver) == "string" then return ver end
 			ver[4] = 0
 			return { ver, ver }
 		end
-		return { { lmajor, lminor, lpatch, iif(lbrack == "(", 0, 1) }, { umajor, uminor, upatch, iif(ubrack == "(", 0, 1) } }
+		if lpatch:len() == 0 or upatch:len() == 0 then
+			lpatch = -1
+			upatch = -1
+		end
+		return { { tonumber(lmajor), tonumber(lminor), tonumber(lpatch), iif(lbrack == "(", 1, 0) }, { tonumber(umajor), tonumber(uminor), tonumber(upatch), iif(ubrack == ")", 1, 0) } }
 	end
 	return { { -1, 0, 0, 0 }, { -1, 0, 0, 0 } }
+end
+
+function pkg:semverRangeToString(range)
+	if range[1][4] == 0 and range[2][4] == 0 then
+		if range[1][1] == range[2][1] and range[1][2] == range[2][2] and range[1][3] == range[2][3] then
+			return pkg:semverToString(range[1])
+		end
+	end
+	local lbrack = iif(range[1][4] == 0, "[", "(")
+	local ubrack = iif(range[2][4] == 0, "]", ")")
+	if range[1][3] < 0 or range[2][3] < 0 then
+		return string.format("%s%d.%d,%d.%d%s", lbrack, range[1][1], range[1][2], range[2][1], range[2][2], ubrack)
+	end
+	return string.format("%s%d.%d.%d,%d.%d.%d%s", lbrack, range[1][1], range[1][2], range[1][3], range[2][1], range[2][2], range[2][3], ubrack)
 end
 
 function pkg:compatibleVersions(a, b)
@@ -198,33 +293,48 @@ function pkg:getPackage(pack)
 	return nil, nil
 end
 
-local function iterr(a, i)
-	i = i - 1
-	local v = a[i]
-	if v then
-		return i, v
-	end
-end
-
-local function ipairsr(a)
-	return iter, a, #a
-end
-
 function pkg:getPkgVersion(pack, version)
 	if not version then
-		version = pack.latest_version
-	end
-
-	if (type(version) == "string" and version:len() == 0) or (type(version) == "table" and #version == 0) then
-		version = pack.latest_version
-	end
-	
-	for _, ver in ipairsr(pack.versions) do
-		if self:compatibleVersions(ver.version, version) then
-			return ver
+		if type(pack.latest_version) == "string" then
+			version = pack.latest_version
+		else
+			version = { pack.latest_version, pack.latest_version }
+			version[1][4] = 0
+			version[2][4] = 0
+		end
+	elseif type(version) == "string" then
+		if version:len() == 0 then
+			if type(pack.latest_version) == "string" then
+				version = pack.latest_version
+			else
+				version = { pack.latest_version, pack.latest_version }
+				version[1][4] = 0
+				version[2][4] = 0
+			end
+		end
+	elseif type(version) == "table" then
+		if #version == 0 then
+			if type(pack.latest_version) == "string" then
+				version = pack.latest_version
+			else
+				version = { pack.latest_version, pack.latest_version }
+				version[1][4] = 0
+				version[2][4] = 0
+			end
 		end
 	end
-	return nil
+	
+	local newestVersion = nil
+	for _, ver in ipairs(pack.versions) do
+		if self:compatibleVersions(ver.version, version) then
+			if not newestVersion then
+				newestVersion = ver
+			elseif self:isVersionGreater(newestVersion, self:semver(ver.version, false)) then
+				newestVersion = ver
+			end
+		end
+	end
+	return newestVersion
 end
 
 function pkgrepos(repos)

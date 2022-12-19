@@ -9,10 +9,10 @@ function pkg:requireExtension(extension)
 	if not exte then
 		error(string.format("Failed to find extension '%s'", ext))
 	end
-	local range = self:semverRange(version)
+	local range = self:semverRange(version, true)
 	local vers  = self:getPkgVersion(exte, range)
 	if not vers then
-		error(string.format("Failed to find version '%s' for extension '%s'", version, ext))
+		error(string.format("Failed to find version '%s' for extension '%s'", version, extension))
 	end
 	
 	if vers.loaded then

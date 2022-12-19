@@ -9,7 +9,7 @@ function git:loadPackage(repo, pack, version, filepath)
 	if pack.isExtension then
 		prefix = "ext"
 	end
-	version.fullPath = path.getabsolute(string.format("%ss/%s-%s", prefix, pack.name, version.name), repo.dir) .. "/"
+	version.fullPath = path.getabsolute(string.format("%ss/%s-%s", prefix, pack.name, pkg:semverToString(version.version)), repo.dir) .. "/"
 	if os.isdir(version.fullPath) then
 		local file = io.readfile(string.format("%s/%s", version.fullPath, ".pkgpatchversion"))
 		local currentVersion = iif(file ~= nil, tonumber(file), version.patch_version)
@@ -31,18 +31,18 @@ function git:loadPackage(repo, pack, version, filepath)
 		end
 		
 		if not os.executef("git clone %s \"%s\" \"%s\"", gitBranch, filepath, version.fullPath) then
-			error(string.format("Failed to clone package '%s' version '%s'", pack.name, version.name))
+			error(string.format("Failed to clone package '%s' version '%s'", pack.name, pkg:semverToString(version.version)))
 		end
 		
 		if version.commit then
 			if not os.executef("git -C %q checkout %s", version.fullPath, version.commit) then
-				error(string.format("Failed to checkout commit '%s' package '%s' version '%s'", verison.commit, pack.name, version.name))
+				error(string.format("Failed to checkout commit '%s' package '%s' version '%s'", verison.commit, pack.name, pkg:semverToString(version.version)))
 			end
 		end
 		
 		if version.apply_patch then
-			if not os.executef("git -C \"%s\" am -q --no-gpg-sign \"%s/patches/%s-%s-%s.patch\"", version.fullPath, repo.dir, prefix, pack.name, version.name) then
-				error(string.format("Failed to apply patch for package '%s' version '%s'", pack.name, version.name))
+			if not os.executef("git -C \"%s\" am -q --no-gpg-sign \"%s/patches/%s-%s-%s.patch\"", version.fullPath, repo.dir, prefix, pack.name, pkg:semverToString(version.version)) then
+				error(string.format("Failed to apply patch for package '%s' version '%s'", pack.name, pkg:semverToString(version.version)))
 			end
 			io.writefile(string.format("%s/%s", version.fullPath, ".pkgpatchversion"), tostring(version.patch_version))
 		end
