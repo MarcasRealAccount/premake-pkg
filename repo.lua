@@ -246,6 +246,9 @@ function pkg:updateRepo(repo)
 	repo.updated = true
 	repoapi:updateRepo(repo, repoPath)
 	repo.data = json.decode(io.readfile(string.format("%s/repo.json", repo.dir)))
+	if not self:isRepoVersionSupported(repo.data.version) then
+		error(string.format("'%s' uses version '%s' which is not supported", path, self:semVerToString(repo.data.version)))
+	end
 	for _, extension in ipairs(repo.data.exts) do
 		extension.isExtension = true
 	end
