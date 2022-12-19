@@ -7,13 +7,13 @@ local pkg = p.extensions.pkg
 pkg.supportedRepoVersions = { nil, 0 }
 
 newoption({
-	trigger     = "pkg-prune",
+	trigger     = "pkg-purge",
 	description = "Redownloads used repositories",
 	category    = "pkg"
 })
 
 newoption({
-	trigger     = "pkg-prune-full",
+	trigger     = "pkg-purge-full",
 	description = "Deletes all repositories first",
 	category    = "pkg"
 })
