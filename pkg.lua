@@ -53,7 +53,8 @@ function pkg:requirePackage(pack)
 	if not packag then
 		error(string.format("Failed to find package '%s'", packa))
 	end
-	local vers = self:getPkgVersion(packag, version)
+	local range = self:semverRange(version)
+	local vers  = self:getPkgVersion(packag, range)
 	if not vers then
 		error(string.format("Failed to find version '%s' for package '%s'", version, packa))
 	end
