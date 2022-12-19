@@ -262,7 +262,7 @@ function pkg:updateRepos()
 		return
 	end
 	self.reloadRepos = false
-	if _OPTIONS["pkg-prune-full"] then
+	if _OPTIONS["pkg-purge-full"] then
 		common:rmdir(string.format("%s/repos/", self.dir))
 	end
 	for _, repo in ipairs(self.repos) do
