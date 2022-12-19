@@ -60,7 +60,7 @@ function pkg:requirePackage(pack)
 	end
 	
 	if vers.loaded then
-		self:runDependencyScript(repo, packag, vers)
+		self:runDepScript(repo, packag, vers)
 		return
 	end
 	
