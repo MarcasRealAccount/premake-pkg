@@ -24,7 +24,7 @@ function pkg:getGenericBuildTool(configs, buildDir)
 		info.configs[config] = {}
 	end
 	info.binDir   = string.format("%s/Bin/", self.currentlyBuildingPackage.version.fullPath)
-	info.buildDir = path.normalize(buildDir)
+	info.buildDir = path.normalize(buildDir) .. "/"
 	function info:mapConfigs(configMap)
 		for config, data in pairs(configMap) do
 			local cfg = self.configs[config]

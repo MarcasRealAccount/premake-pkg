@@ -23,7 +23,7 @@ function pkg:getMSBuild(configs, buildDir)
 	function info:build()
 		for config, data in pairs(self.configs) do
 			for target, dat in pairs(data.data.targets) do
-				dat.fullPath = self.solution .. pkg:formatString(self.pathFmt, { targetname = target, targetpath = dat.path, config = config })
+				dat.fullPath = self.buildDir .. pkg:formatString(self.pathFmt, { targetname = target, targetpath = dat.path, config = config })
 			end
 
 			if not os.executef("call %q -verbosity:minimal -p:Configuration=%s -m %q", self.msbuild, config, self.solution) then
