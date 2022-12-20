@@ -210,11 +210,11 @@ function pkg:splitPkgName(name)
 end
 
 function pkg:addRepo(repo)
-	table.insert(self.repos, {
+	table.insert(self.repos, 1, {
 		path    = repo,
 		updated = false,
 		cloned  = false
-	}, 1)
+	})
 	self.updateRepos = true
 end
 
