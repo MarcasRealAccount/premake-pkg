@@ -49,12 +49,12 @@ function pkg:requirePackage(pack)
 	self:updateRepos()
 	
 	local packa, version = self:splitPkgName(pack)
-	local packag, repo   = self:getPackage(packa)
-	if not packag then
+	local packs          = self:getPackages(packa)
+	if not packs or #packs == 0 then
 		error(string.format("Failed to find package '%s'", packa))
 	end
-	local range = self:semverRange(version, true)
-	local vers  = self:getPkgVersion(packag, range)
+	local range              = self:semverRange(version, true)
+	local repo, packag, vers = self:getPkgVersion(packs, range)
 	if not vers then
 		error(string.format("Failed to find version '%s' for package '%s'", version, packa))
 	end

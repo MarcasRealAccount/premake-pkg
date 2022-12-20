@@ -5,12 +5,12 @@ function pkg:requireExtension(extension)
 	self:updateRepos()
 	
 	local ext, version = self:splitPkgName(extension)
-	local exte, repo   = self:getExtension(ext)
-	if not exte then
+	local exts         = self:getExtensions(ext)
+	if not exts or #exts == 0 then
 		error(string.format("Failed to find extension '%s'", ext))
 	end
-	local range = self:semverRange(version, true)
-	local vers  = self:getPkgVersion(exte, range)
+	local range            = self:semverRange(version, true)
+	local repo, exte, vers = self:getPkgVersion(exts, range)
 	if not vers then
 		error(string.format("Failed to find version '%s' for extension '%s'", version, extension))
 	end

@@ -272,55 +272,63 @@ function pkg:updateRepos()
 	end
 end
 
-function pkg:getExtension(ext)
+function pkg:getExtensions(ext)
+	local exts = {}
+
 	for _, repo in ipairs(self.repos) do
 		for _, extension in ipairs(repo.data.exts) do
 			if extension.name == ext then
-				return extension, repo
+				table.insert(exts, { extension, repo })
 			end
 		end
 	end
-	
-	return nil, nil
+
+	return exts
 end
 
-function pkg:getPackage(pack)
+function pkg:getPackages(pack)
+	local pkgs = {}
+
 	for _, repo in ipairs(self.repos) do
 		for _, packa in ipairs(repo.data.pkgs) do
 			if packa.name == pack then
-				return packa, repo
+				table.insert(pkgs, { packa, repo })
 			end
 		end
 	end
-	
-	return nil, nil
+
+	return pkgs
 end
 
-function pkg:getPkgVersion(pack, version)
+function pkg:getPkgVersion(packs, version)
+	if not packs or #packs == 0 then
+		return nil, nil, nil
+	end
+
 	if not version then
-		if type(pack.latest_version) == "string" then
-			version = pack.latest_version
+		if type(packs[1][1].latest_version) == "string" then
+			version = packs[1][1].latest_version
 		else
-			version = { pack.latest_version, pack.latest_version }
+			version = { packs[1][1].latest_version, packs[1][1].latest_version }
 			version[1][4] = 0
 			version[2][4] = 0
 		end
 	elseif type(version) == "string" then
 		if version:len() == 0 then
-			if type(pack.latest_version) == "string" then
-				version = pack.latest_version
+			if type(packs[1][1].latest_version) == "string" then
+				version = packs[1][1].latest_version
 			else
-				version = { pack.latest_version, pack.latest_version }
+				version = { packs[1][1].latest_version, packs[1][1].latest_version }
 				version[1][4] = 0
 				version[2][4] = 0
 			end
 		end
 	elseif type(version) == "table" then
 		if #version == 0 then
-			if type(pack.latest_version) == "string" then
-				version = pack.latest_version
+			if type(packs[1][1].latest_version) == "string" then
+				version = packs[1][1].latest_version
 			else
-				version = { pack.latest_version, pack.latest_version }
+				version = { packs[1][1].latest_version, packs[1][1].latest_version }
 				version[1][4] = 0
 				version[2][4] = 0
 			end
@@ -328,17 +336,24 @@ function pkg:getPkgVersion(pack, version)
 	end
 	
 	local newestVersion = nil
-	for _, ver in ipairs(pack.versions) do
-		if self:compatibleVersions(ver.version, version) then
-			if not newestVersion then
-				newestVersion = ver
-			elseif self:isVersionGreater(newestVersion, self:semver(ver.version, false)) then
-				newestVersion = ver
+	local bestPack      = nil
+	local bestRepo      = nil
+	for _, pack in ipairs(packs) do
+		for _, ver in ipairs(pack[1].versions) do
+			if self:compatibleVersions(ver.version, version) then
+				if not newestVersion then
+					newestVersion = ver
+					bestPack      = pack[1]
+					bestRepo      = pack[2]
+				elseif self:isVersionGreater(newestVersion, self:semver(ver.version, false)) then
+					newestVersion = ver
+					bestPack      = pack[1]
+					bestRepo      = pack[2]
+				end
 			end
 		end
 	end
-	-- TODO(MarcasRealAccount): If version is not supported, maybe check the next package in the list
-	return newestVersion
+	return bestRepo, bestPack, newestVersion
 end
 
 function pkgrepos(repos)
