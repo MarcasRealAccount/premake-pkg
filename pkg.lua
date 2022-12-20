@@ -24,7 +24,7 @@ function pkg:getGenericBuildTool(configs, buildDir)
 		info.configs[config] = {}
 	end
 	info.binDir   = string.format("%s/Bin/", self.currentlyBuildingPackage.version.fullPath)
-	info.buildDir = path.normalize(buildDir)
+	info.buildDir = path.normalize(buildDir) .. "/"
 	function info:mapConfigs(configMap)
 		for config, data in pairs(configMap) do
 			local cfg = self.configs[config]
@@ -49,18 +49,18 @@ function pkg:requirePackage(pack)
 	self:updateRepos()
 	
 	local packa, version = self:splitPkgName(pack)
-	local packag, repo   = self:getPackage(packa)
-	if not packag then
+	local packs          = self:getPackages(packa)
+	if not packs or #packs == 0 then
 		error(string.format("Failed to find package '%s'", packa))
 	end
-	local range = self:semverRange(version, true)
-	local vers  = self:getPkgVersion(packag, range)
+	local range              = self:semverRange(version, true)
+	local repo, packag, vers = self:getPkgVersion(packs, range)
 	if not vers then
 		error(string.format("Failed to find version '%s' for package '%s'", version, packa))
 	end
 	
 	if vers.loaded then
-		self:runDependencyScript(repo, packag, vers)
+		self:runDepScript(repo, packag, vers)
 		return
 	end
 	

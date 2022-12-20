@@ -7,7 +7,7 @@ local github        = pkg.repoapis.github
 function github:updateRepo(repo, repoPath)
 	repo.dir = pkg.dir .. "/repos/github-" .. repoPath:gsub("/", "-") .. "/"
 	if os.isdir(repo.dir) then
-		if _OPTIONS["pkg-prune"] then
+		if _OPTIONS["pkg-purge"] then
 			common:rmdir(repo.dir)
 		else
 			repo.cloned = true
