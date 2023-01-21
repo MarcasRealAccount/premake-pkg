@@ -7,7 +7,9 @@ if not common then
 		target      = os.target(),
 		arch        = nil,
 		targetArchs = nil,
-		fullSetup   = true
+		fullSetup   = true,
+		failed      = false,
+		messages    = {}
 	}
 end
 
@@ -17,6 +19,19 @@ newoption({
 	value       = "architectures",
 	default     = "host"
 })
+
+function common:makeMessage(text, color)
+	return { text = text, color = color }
+end
+
+function common:pushMessage(message)
+	table.insert(self.messages, message)
+end
+
+function common:fail(fmt, ...)
+	common:pushMessage(common:makeMessage(string.format(fmt, ...), term.errorColor))
+	self.failed = true
+end
 
 function common:projectName()
 	return premake.api.scope.current.name
@@ -124,22 +139,18 @@ function common:outDirs(isStatic)
 	end
 end
 
+function common:actionSupportsDebugDir()
+	return _ACTION == "xcode4" or _ACTION == "gmake" or _ACTION == "gmake2" or _ACTION == "cmake"
+end
+
 function common:debugDir()
 	local projectName     = self:projectName()
 	local projectLocation = self:projectLocation()
 	debugdir(projectLocation .. self.dbgDir)
 
-	term.pushColor(term.warningColor)
-	if _ACTION == "xcode4" then
-		print([[The xcode4 action doesn't support debug directory.
-So you have to edit the scheme of ']] .. projectName .. [[' (Top center) and set it to:
-]] .. projectLocation .. self.dbgDir)
-	elseif _ACTION == "gmake" or _ACTION == "gmake2" or _ACTION == "cmake" then
-		print("The " .. _ACTION .. [[ action doesn't support debug directory.
-So for the project ']] .. projectName .. [[' you have to manually 'cd' into the directory:
-]] .. projectLocation .. self.dbgDir)
+	if common:actionSupportsDebugDir() then
+		self:pushMessage(self:makeMessage(string.format("The '%s' action doesn't support debug directory.\nSo for the project '%s' you have to manually 'cd' into the directory: '%s%s'", _ACTION, projectName, projectLocation, self.dbgDir), term.warningColor))
 	end
-	term.popColor()
 end
 
 function common:scriptDir()
@@ -397,3 +408,15 @@ end
 term.warningColor = term.yellow
 term.errorColor   = term.red
 term.infoColor    = term.green
+
+premake.override(premake.main, "checkInteractive", function(base)
+	for _, message in ipairs(common.messages) do
+		term.pushColor(message.color)
+		print(message.text)
+		term.popColor()
+	end
+	if common.failed then
+		error("Errors ^")
+	end
+	base()
+end)
