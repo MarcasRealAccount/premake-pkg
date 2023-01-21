@@ -3,7 +3,7 @@ local api = p.api
 
 p.extensions     = p.extensions or {}
 p.extensions.pkg = {
-	_VERSION     = "1.2.0",
+	_VERSION     = "1.3.0",
 	dir          = common:scriptDir(),
 	reloadRepos  = true,
 	repos        = {
