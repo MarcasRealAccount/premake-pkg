@@ -4,8 +4,8 @@ local pkg = p.extensions.pkg
 function pkg:requireExtension(extension)
 	self:updateRepos()
 	
-	local ext, version = self:splitPkgName(extension)
-	local exts         = self:getExtensions(ext)
+	local ext, version, args = self:splitPkgName(extension)
+	local exts               = self:getExtensions(ext)
 	if not exts or #exts == 0 then
 		common:fail("Failed to find extension '%s'", ext)
 		return
@@ -23,7 +23,9 @@ function pkg:requireExtension(extension)
 	
 	local loaderAPI, filepath = self:getLoaderAPI(vers.path)
 	loaderAPI:loadPackage(repo, exte, vers, filepath)
-	dofile(vers.fullPath .. "/init.lua")
+	_PKG_ARGS = args
+	pcall(function() dofile(vers.fullPath .. "/init.lua") end)
+	_PKG_ARGS = nil
 	vers.loaded = true
 end
 

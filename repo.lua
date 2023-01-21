@@ -202,11 +202,22 @@ function pkg:compatibleVersions(a, b)
 end
 
 function pkg:splitPkgName(name)
-	local index   = name:find("@", 1, true)
-	if not index then
-		return name, ""
+	local vindex = name:find("@", 1, true)
+	local aindex = name:find(":", vindex or 1, true)
+	vindex       = vindex or aindex or name:len() + 1
+	aindex       = aindex or name:len() + 1
+	local n,v,a = name:sub(1, vindex - 1), name:sub(vindex + 1, aindex - 1), name:sub(aindex + 1)
+	if v:len() == 0 then v = "" end
+	if a:len() == 0 then
+		a = {}
+	else
+		local t = {}
+		for lhs, rhs in a:gmatch("([^ =]+)=([^ ]+)") do
+			t[lhs] = rhs
+		end
+		a = t
 	end
-	return name:sub(1, index - 1), name:sub(index + 1)
+	return n,v,a
 end
 
 function pkg:addRepo(repo)

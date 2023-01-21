@@ -38,19 +38,23 @@ function pkg:getGenericBuildTool(configs, buildDir)
 	return info
 end
 
-function pkg:runBuildScript(repo, pack, version)
-	dofile(version.fullPath .. "/" .. version.buildscript)
+function pkg:runBuildScript(repo, pack, version, args)
+	_PKG_ARGS = args
+	pcall(function() dofile(version.fullPath .. "/" .. version.buildscript) end)
+	_PKG_ARGS = nil
 end
 
-function pkg:runDepScript(repo, pack, version)
-	dofile(version.fullPath .. "/" .. version.depscript)
+function pkg:runDepScript(repo, pack, version, args)
+	_PKG_ARGS = args
+	pcall(function() dofile(version.fullPath .. "/" .. version.depscript) end)
+	_PKG_ARGS = nil
 end
 
 function pkg:requirePackage(pack)
 	self:updateRepos()
 	
-	local packa, version = self:splitPkgName(pack)
-	local packs          = self:getPackages(packa)
+	local packa, version, args = self:splitPkgName(pack)
+	local packs                = self:getPackages(packa)
 	if not packs or #packs == 0 then
 		common:fail("Failed to find package '%s'", packa)
 		return
@@ -79,11 +83,11 @@ function pkg:requirePackage(pack)
 	end
 	
 	if not vers.built then
-		self:runBuildScript(repo, packag, vers)
+		self:runBuildScript(repo, packag, vers, args)
 		io.writefile(string.format("%s/Bin/.built", vers.fullPath), "Built")
 		vers.built = true
 	end
-	self:runDepScript(repo, packag, vers)
+	self:runDepScript(repo, packag, vers, args)
 	self.currentlyBuildingPackage = { }
 end
 
