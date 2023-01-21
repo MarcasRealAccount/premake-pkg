@@ -7,12 +7,14 @@ function pkg:requireExtension(extension)
 	local ext, version = self:splitPkgName(extension)
 	local exts         = self:getExtensions(ext)
 	if not exts or #exts == 0 then
-		error(string.format("Failed to find extension '%s'", ext))
+		common:fail("Failed to find extension '%s'", ext)
+		return
 	end
 	local range            = self:semverRange(version, true)
 	local repo, exte, vers = self:getPkgVersion(exts, range)
 	if not vers then
-		error(string.format("Failed to find version '%s' for extension '%s'", version, extension))
+		common:fail("Failed to find version '%s' for extension '%s'", version, ext)
+		return
 	end
 	
 	if vers.loaded then
@@ -27,7 +29,8 @@ end
 
 function pkgexts(extensions)
 	if type(extensions) ~= "table" and type(extensions) ~= "string" then
-		error("pkgexts argument #1 has to be either a table of strings or a string")
+		common:fail("pkgexts argument #1 has to be either a table of strings or a string")
+		return
 	end
 	
 	if type(extensions) == "string" then
@@ -41,7 +44,8 @@ function pkgexts(extensions)
 	
 	for _, extension in ipairs(extensions) do
 		if type(extension) ~= "string" then
-			error("pkgexts argument #1 has to be either a table of strings or a string")
+			common:fail("pkgexts argument #1 has to be either a table of strings or a string")
+			return
 		end
 		
 		pkg:requireExtension(extension)

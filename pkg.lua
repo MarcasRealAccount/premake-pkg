@@ -15,7 +15,8 @@ function pkg:formatString(fmt, replacements)
 end
 
 function pkg:pkgError(msgFormat, ...)
-	error(string.format("%s for %s-%s", string.format(msgFormat, ...), self.currentlyBuildingPackage.pack.name, self.currentlyBuildingPackage.version.name))
+	common:fail("%s for %s-%s", string.format(msgFormat, ...), self.currentlyBuildingPackage.pack.name, self.currentlyBuildingPackage.version.name)
+	error(0)
 end
 
 function pkg:getGenericBuildTool(configs, buildDir)
@@ -51,12 +52,14 @@ function pkg:requirePackage(pack)
 	local packa, version = self:splitPkgName(pack)
 	local packs          = self:getPackages(packa)
 	if not packs or #packs == 0 then
-		error(string.format("Failed to find package '%s'", packa))
+		common:fail("Failed to find package '%s'", packa)
+		return
 	end
 	local range              = self:semverRange(version, true)
 	local repo, packag, vers = self:getPkgVersion(packs, range)
 	if not vers then
-		error(string.format("Failed to find version '%s' for package '%s'", version, packa))
+		common:fail("Failed to find version '%s' for package '%s'", version, packa)
+		return
 	end
 	
 	if vers.loaded then
@@ -90,7 +93,8 @@ function pkgdeps(deps)
 	end
 
 	if type(deps) ~= "table" and type(deps) ~= "string" then
-		error("pkgdeps argument #1 has to be either a table of strings or a string")
+		common:fail("pkgdeps argument #1 has to be either a table of strings or a string")
+		return
 	end
 	
 	if type(deps) == "string" then
@@ -104,7 +108,8 @@ function pkgdeps(deps)
 	
 	for _, dep in ipairs(deps) do
 		if type(dep) ~= "string" then
-			error("pkgdeps argument #1 has to be either a table of strings or a string")
+			common:fail("pkgdeps argument #1 has to be either a table of strings or a string")
+			return
 		end
 		
 		pkg:requirePackage(dep)

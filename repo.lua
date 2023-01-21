@@ -220,34 +220,40 @@ end
 
 function pkg:updateRepo(repo)
 	if not repo then
-		error("pkg repo is nil")
+		common:fail("pkg repo is nil")
+		return 
 	end
 
 	if not repo.path then
-		error("pkg repo is missing a path")
+		common:fail("pkg repo is missing a path")
+		return
 	end
 
 	if type(repo.path) ~= "string" then
-		error("pkg repo path has to be a string")
+		common:fail("pkg repo path has to be a string")
+		return
 	end
 
 	local path     = repo.path
 	local index    = path:find("+", 1, true)
 	if not index then
-		error(string.format("'%s' doesn't use an api, if github repo add 'github+'", path))
+		common:fail("'%s' doesn't use an api, if githug repo add the 'github+' prefix", path)
+		return
 	end
 	local apiName  = path:sub(1, index - 1)
 	local repoPath = path:sub(index + 1)
 	local repoapi  = pkg.repoapis[apiName]
 	if not repoapi then
-		error(string.format("'%s' uses unknown api '%s'", path, apiName))
+		common:fail("'%s' uses unknown api '%s'", path, apiName)
+		return
 	end
 	repo.api     = repoapi
 	repo.updated = true
 	repoapi:updateRepo(repo, repoPath)
 	repo.data = json.decode(io.readfile(string.format("%s/repo.json", repo.dir)))
 	if not self:isRepoVersionSupported(repo.data.version) then
-		error(string.format("'%s' uses version '%s' which is not supported", path, self:semverToString(repo.data.version)))
+		common:fail("'%s' uses version '%s' which is not supported", path, self:semverToString(repo.data.version))
+		return
 	end
 	for _, extension in ipairs(repo.data.exts) do
 		extension.isExtension = true
@@ -358,7 +364,8 @@ end
 
 function pkgrepos(repos)
 	if type(repos) ~= "table" and type(repos) ~= "string" then
-		error("pkgrepos argument #1 has to be either a table of strings or a string")
+		common:fail("pkgrepos argument #1 has to be either a table of strings or a string")
+		return
 	end
 	
 	if type(repos) == "string" then
@@ -368,7 +375,8 @@ function pkgrepos(repos)
 	
 	for _, repo in ipairs(repos) do
 		if type(repo) ~= "string" then
-			error("pkgrepos argument #1 has to be either a table of strings or a string")
+			common:fail("pkgrepos argument #1 has to be either a table of strings or a string")
+			return
 		end
 		
 		pkg:addRepo(repo)

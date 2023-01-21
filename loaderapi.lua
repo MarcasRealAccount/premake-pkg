@@ -11,7 +11,8 @@ function pkg:getLoaderAPI(path)
 	local filepath  = path:sub(index + 1)
 	local loaderapi = pkg.loaderapis[apiName]
 	if not loaderapi then
-		error(string.format("Invalid loader api '%s' used in path '%s'", apiName, path))
+		common:fail("Invalid loader api '%s' used in path '%s'", apiName, path)
+		return
 	end
 	return loaderapi, filepath
 end
