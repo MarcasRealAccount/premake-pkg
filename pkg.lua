@@ -40,13 +40,19 @@ end
 
 function pkg:runBuildScript(repo, pack, version, args)
 	_PKG_ARGS = args
-	pcall(function() dofile(version.fullPath .. "/" .. version.buildscript) end)
+	local suc, msg = pcall(function() dofile(version.fullPath .. "/" .. version.buildscript) end)
+	if not suc then
+		self:pkgError("Threw an exception in the build script\n%s", msg)
+	end
 	_PKG_ARGS = nil
 end
 
 function pkg:runDepScript(repo, pack, version, args)
 	_PKG_ARGS = args
-	pcall(function() dofile(version.fullPath .. "/" .. version.depscript) end)
+	local suc, msg = pcall(function() dofile(version.fullPath .. "/" .. version.depscript) end)
+	if not suc then
+		self:pkgError("Threw an exception in the dep script\n%s", msg)
+	end
 	_PKG_ARGS = nil
 end
 
