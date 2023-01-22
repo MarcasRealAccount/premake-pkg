@@ -39,12 +39,18 @@ function pkg:getGenericBuildTool(configs, buildDir)
 end
 
 function pkg:runBuildScript(repo, pack, version, args)
+	local rerunBuildScriptNextTime = false
+	
 	_PKG_ARGS = args
-	local suc, msg = pcall(function() dofile(version.fullPath .. "/" .. version.buildscript) end)
+	local suc, msg = pcall(function()
+		rerunBuildScriptNextTime = dofile(version.fullPath .. "/" .. version.buildscript)
+	end)
 	if not suc then
 		self:pkgError("Threw an exception in the build script\n%s", msg)
 	end
 	_PKG_ARGS = nil
+	
+	return rerunBuildScriptNextTime
 end
 
 function pkg:runDepScript(repo, pack, version, args)
@@ -89,8 +95,9 @@ function pkg:requirePackage(pack)
 	end
 	
 	if not vers.built then
-		self:runBuildScript(repo, packag, vers, args)
-		io.writefile(string.format("%s/Bin/.built", vers.fullPath), "Built")
+		if not self:runBuildScript(repo, packag, vers, args) then
+			io.writefile(string.format("%s/Bin/.built", vers.fullPath), "Built")
+		end
 		vers.built = true
 	end
 	self:runDepScript(repo, packag, vers, args)
