@@ -25,11 +25,14 @@ function pkg:getGMake(configs, buildDir)
 			
 			if not os.executef("make -C %q -j %s %s", data.path, targets, data.args or "") then
 				pkg:pkgError("Failed to build configuration '%s'", config)
+				goto CONTINUE
 			end
 			
 			for target, dat in pairs(data.data.targets) do
 				common:copyFiles(dat.fullPath, dat.outputFiles, string.format("%s/%s-%s-%s/", self.binDir, common.host, common.arch, data.data.config))
 			end
+			
+			::CONTINUE::
 		end
 	end
 	return info

@@ -8,25 +8,29 @@ function pkg:requireExtension(extension)
 	local exts               = self:getExtensions(ext)
 	if not exts or #exts == 0 then
 		common:fail("Failed to find extension '%s'", ext)
-		return
+		return false
 	end
 	local range            = self:semverRange(version, true)
 	local repo, exte, vers = self:getPkgVersion(exts, range)
 	if not vers then
 		common:fail("Failed to find version '%s' for extension '%s'", version, ext)
-		return
+		return false
 	end
 	
 	if vers.loaded then
-		return
+		return true
 	end
 	
-	local loaderAPI, filepath = self:getLoaderAPI(vers.path)
-	loaderAPI:loadPackage(repo, exte, vers, filepath)
+	self.currentlyBuildingPackage = { repo = repo, pack = packag, version = vers }
+	local loaderAPI, filepath     = self:getLoaderAPI(vers.path)
+	vers.loaded                   = true
+	if not loaderAPI or not loaderAPI:loadPackage(repo, exte, vers, filepath) then
+		return false
+	end
 	_PKG_ARGS = args
 	pcall(function() dofile(vers.fullPath .. "/init.lua") end)
 	_PKG_ARGS = nil
-	vers.loaded = true
+	return true
 end
 
 function pkgexts(extensions)

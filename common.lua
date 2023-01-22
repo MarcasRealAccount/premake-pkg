@@ -29,7 +29,7 @@ function common:pushMessage(message)
 end
 
 function common:fail(fmt, ...)
-	common:pushMessage(common:makeMessage(string.format(fmt, ...), term.errorColor))
+	self:pushMessage(self:makeMessage(string.format(fmt, ...), term.errorColor))
 	self.failed = true
 end
 
@@ -416,7 +416,7 @@ premake.override(premake.main, "checkInteractive", function(base)
 		term.popColor()
 	end
 	if common.failed then
-		error("Errors ^")
+		error("Errors ^", 0)
 	end
 	base()
 end)

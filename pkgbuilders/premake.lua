@@ -26,13 +26,13 @@ function pkg:setupPremake(wksName, arch, configs, dir, buildDir, outputDir)
 		buildTool    = self:getMSBuild(configs, buildDir)
 		local action = string.format("vs%d", buildTool.vsVersion)
 		if not invokePremake(action) then
-			self:pkgError("Failed to run premake")
+			self:pkgErrorFF("Failed to run premake")
 		end
 		buildTool:setSolution(buildDir .. wksName .. ".sln")
 	else
 		buildTool = self:getGMake(configs, buildDir)
 		if not invokePremake("gmake2") then
-			self:pkgError("Failed to run premake")
+			self:pkgErrorFF("Failed to run premake")
 		end
 		
 		for _, config in ipairs(configs) do
