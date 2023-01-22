@@ -18,9 +18,12 @@ function github:updateRepo(repo, repoPath)
 		local repoLink = string.format("https://github.com/%s.git", repoPath)
 		if not os.executef("git clone \"%s\" \"%s\"", repoLink, repo.dir) then
 			common.fail("Failed to clone repo '%s'", repoLink)
-			return
+			return false
 		end
 	elseif not os.executef("git -C \"%s\" pull -q", repo.dir) then
 		common.fail("Failed to update repo '%s'", repo.dir)
+		return false
 	end
+	
+	return true
 end

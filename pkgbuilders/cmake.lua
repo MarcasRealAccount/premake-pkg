@@ -9,7 +9,7 @@ function pkg:setupCMake(prjName, configs, dir, buildDir, args)
 		buildTool    = self:getMSBuild(configs, buildDir)
 		local cmakeG = string.format("Visual Studio %d %d", buildTool.msvcVersion, buildTool.vsVersion)
 		if not os.executef("cmake --log-level=ERROR -S %q -B %q -G %q %s", dir, buildDir, cmakeG, args) then
-			self:pkgError("Failed to run cmake")
+			self:pkgErrorFF("Failed to run cmake")
 		end
 		buildTool:setSolution(buildDir .. prjName .. ".sln")
 		buildTool.pathFmt = "%{targetpath}/%{config}"
@@ -18,7 +18,7 @@ function pkg:setupCMake(prjName, configs, dir, buildDir, args)
 		for _, config in ipairs(configs) do
 			local configPath = buildDir .. config .. "/"
 			if not os.executef("cmake --log-level=ERROR -S %q -B %q -G %q -D CMAKE_BUILD_TYPE=%s %s", dir, configPath, "Unix Makefiles", config, args) then
-				self:pkgError("Failed to run cmake in '%s'", config)
+				self:pkgErrorFF("Failed to run cmake in '%s'", config)
 			end
 			buildTool:setConfigPath(config, configPath)
 		end

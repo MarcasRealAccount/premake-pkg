@@ -230,41 +230,41 @@ function pkg:addRepo(repo)
 end
 
 function pkg:updateRepo(repo)
+	repo.updated = true
 	if not repo then
 		common:fail("pkg repo is nil")
-		return 
+		return false
 	end
 
 	if not repo.path then
 		common:fail("pkg repo is missing a path")
-		return
+		return false
 	end
 
 	if type(repo.path) ~= "string" then
 		common:fail("pkg repo path has to be a string")
-		return
+		return false
 	end
 
 	local path     = repo.path
 	local index    = path:find("+", 1, true)
 	if not index then
 		common:fail("'%s' doesn't use an api, if githug repo add the 'github+' prefix", path)
-		return
+		return false
 	end
 	local apiName  = path:sub(1, index - 1)
 	local repoPath = path:sub(index + 1)
 	local repoapi  = pkg.repoapis[apiName]
 	if not repoapi then
 		common:fail("'%s' uses unknown api '%s'", path, apiName)
-		return
+		return false
 	end
 	repo.api     = repoapi
-	repo.updated = true
 	repoapi:updateRepo(repo, repoPath)
 	repo.data = json.decode(io.readfile(string.format("%s/repo.json", repo.dir)))
 	if not self:isRepoVersionSupported(repo.data.version) then
 		common:fail("'%s' uses version '%s' which is not supported", path, self:semverToString(repo.data.version))
-		return
+		return false
 	end
 	for _, extension in ipairs(repo.data.exts) do
 		extension.isExtension = true
@@ -272,6 +272,7 @@ function pkg:updateRepo(repo)
 	for _, pack in ipairs(repo.data.pkgs) do
 		pack.isExtension = false
 	end
+	return true
 end
 
 function pkg:updateRepos()

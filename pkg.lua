@@ -15,8 +15,12 @@ function pkg:formatString(fmt, replacements)
 end
 
 function pkg:pkgError(msgFormat, ...)
-	common:fail("%s for %s-%s", string.format(msgFormat, ...), self.currentlyBuildingPackage.pack.name, self.currentlyBuildingPackage.version.name)
-	error(0)
+	common:fail("%s for %s-%s", string.format(msgFormat, ...), self.currentlyBuildingPackage.pack.name, self:semverToString(self.currentlyBuildingPackage.version.version))
+end
+
+function pkg:pkgErrorFF(msgFormat, ...)
+	self:pkgError(msgFormat, ...)
+	error(nil, 0)
 end
 
 function pkg:getGenericBuildTool(configs, buildDir)
@@ -39,14 +43,26 @@ function pkg:getGenericBuildTool(configs, buildDir)
 end
 
 function pkg:runBuildScript(repo, pack, version, args)
+	local rerunBuildScriptNextTime = false
+	
 	_PKG_ARGS = args
-	pcall(function() dofile(version.fullPath .. "/" .. version.buildscript) end)
+	local suc, msg = pcall(function()
+		rerunBuildScriptNextTime = dofile(version.fullPath .. "/" .. version.buildscript)
+	end)
+	if not suc and msg then
+		self:pkgError("Threw an exception in the build script\n%s\n", tostring(msg))
+	end
 	_PKG_ARGS = nil
+	
+	return rerunBuildScriptNextTime
 end
 
 function pkg:runDepScript(repo, pack, version, args)
 	_PKG_ARGS = args
-	pcall(function() dofile(version.fullPath .. "/" .. version.depscript) end)
+	local suc, msg = pcall(function() dofile(version.fullPath .. "/" .. version.depscript) end)
+	if not suc and msg then
+		self:pkgError("Threw an exception in the dep script\n%s\n", tostring(msg))
+	end
 	_PKG_ARGS = nil
 end
 
@@ -57,24 +73,26 @@ function pkg:requirePackage(pack)
 	local packs                = self:getPackages(packa)
 	if not packs or #packs == 0 then
 		common:fail("Failed to find package '%s'", packa)
-		return
+		return false
 	end
 	local range              = self:semverRange(version, true)
 	local repo, packag, vers = self:getPkgVersion(packs, range)
 	if not vers then
 		common:fail("Failed to find version '%s' for package '%s'", version, packa)
-		return
+		return false
 	end
 	
 	if vers.loaded then
 		self:runDepScript(repo, packag, vers)
-		return
+		return true
 	end
 	
 	self.currentlyBuildingPackage = { repo = repo, pack = packag, version = vers }
-	local loaderAPI, filepath = self:getLoaderAPI(vers.path)
-	loaderAPI:loadPackage(repo, packag, vers, filepath)
-	vers.loaded = true
+	local loaderAPI, filepath     = self:getLoaderAPI(vers.path)
+	vers.loaded                   = true
+	if not loaderAPI or not loaderAPI:loadPackage(repo, packag, vers, filepath) then
+		return false
+	end
 	
 	if not vers.built then
 		if os.isfile(string.format("%s/Bin/.built", vers.fullPath)) then
@@ -83,12 +101,14 @@ function pkg:requirePackage(pack)
 	end
 	
 	if not vers.built then
-		self:runBuildScript(repo, packag, vers, args)
-		io.writefile(string.format("%s/Bin/.built", vers.fullPath), "Built")
+		if not self:runBuildScript(repo, packag, vers, args) then
+			io.writefile(string.format("%s/Bin/.built", vers.fullPath), "Built")
+		end
 		vers.built = true
 	end
 	self:runDepScript(repo, packag, vers, args)
 	self.currentlyBuildingPackage = { }
+	return true
 end
 
 function pkgdeps(deps)

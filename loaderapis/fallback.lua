@@ -6,4 +6,5 @@ local fallback          = pkg.loaderapis.fallback
 
 function fallback:loadPackage(repo, pack, version, filepath)
 	version.fullPath = path.getabsolute(filepath, repo.dir)
+	return true
 end
