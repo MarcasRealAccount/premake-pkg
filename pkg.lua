@@ -67,6 +67,7 @@ function pkg:runDepScript(repo, pack, version, args)
 end
 
 function pkg:requirePackage(pack)
+	-- TODO(MarcasRealAccount): Implement cross compilation support through 'common.targetArchs'
 	self:updateRepos()
 	
 	local packa, version, args = self:splitPkgName(pack)
@@ -95,14 +96,14 @@ function pkg:requirePackage(pack)
 	end
 	
 	if not vers.built then
-		if os.isfile(string.format("%s/Bin/.built", vers.fullPath)) then
+		if os.isfile(string.format("%s/Bin/%s-%s.built", vers.fullPath, common.host, common.arch)) then
 			vers.built = true
 		end
 	end
 	
 	if not vers.built then
 		if not self:runBuildScript(repo, packag, vers, args) then
-			io.writefile(string.format("%s/Bin/.built", vers.fullPath), "Built")
+			io.writefile(string.format("%s/Bin/%s-%s.built", vers.fullPath, common.host, common.arch), "Built")
 		end
 		vers.built = true
 	end
