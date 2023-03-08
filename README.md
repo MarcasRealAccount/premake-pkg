@@ -16,7 +16,7 @@ this build script is located in the package itself (Most likely added via a git 
 this script will setup the project and build it the same way it normally would be used,  
 however it has to build every path (Debug, Release and Dist) in cmake that equates to (Debug, RelWithDebInfo, Release).  
 After that it will invoke a dependency script which adds the output directory as a library path, adds links and external include dirs. (Though this isn't necessarily the case for all packages)  
-There is also `pkgexts({})` which adds extensions. (These are handy to utilize in the [premake-system.lua](https://premake.github.io/docs/Locating-Scripts) file
+There is also `pkgexts({})` which adds extensions. (These are handy to utilize in the [premake-system.lua](https://premake.github.io/docs/Locating-Scripts) file)
 
 # How to use
 All you need to do is clone this github repository. Find the [premake-system.lua](https://premake.github.io/docs/Locating-Scripts) file and add `require("premake-pkg")`
