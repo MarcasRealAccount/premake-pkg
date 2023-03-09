@@ -129,12 +129,13 @@ function common:setConfigsAndPlatforms()
 	filter({})
 end
 
-function common:outDirs(isStatic)
+function common:outDirs(isStatic, targetSuffix)
+	targetSuffix = targetSuffix or ""
 	if isStatic then
-		targetdir("%{wks.location}/" .. self.objDir)
+		targetdir("%{wks.location}/" .. self.objDir .. targetSuffix)
 		objdir("%{wks.location}/" .. self.objDir)
 	else
-		targetdir("%{wks.location}/" .. self.binDir)
+		targetdir("%{wks.location}/" .. self.binDir .. targetSuffix)
 		objdir("%{wks.location}/" .. self.objDir)
 	end
 end
