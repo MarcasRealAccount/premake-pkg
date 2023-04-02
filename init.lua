@@ -1,6 +1,8 @@
-local p = premake
+local scriptDir = debug.getinfo(1, "S").source:sub(2)
+scriptDir       = scriptDir:match("(.*/)")
 
--- Include source files manually if not embedded
-for _, file in ipairs(dofile("_manifest.lua")) do
-	include(file)
+for _, file in ipairs(dofile(path.getabsolute("_manifest.lua", scriptDir))) do
+	if file ~= "init.lua" then
+		require(path.replaceextension(path.getabsolute(file, scriptDir), ""))
+	end
 end
