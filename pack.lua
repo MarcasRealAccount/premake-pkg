@@ -81,7 +81,7 @@ function dep:splitPackName(name)
 	
 	local args = {}
 	if argsStr:len() > 0 then
-		for lhs, rhs in a:gmatch("([^ =]+)=([^,]+)") do
+		for lhs, rhs in argsStr:gmatch("([^ =]+)=([^,]+)") do
 			args[lhs] = rhs
 		end
 	end
