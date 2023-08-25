@@ -13,7 +13,7 @@ end
 
 function gmake:setConfigDir(config, configDir)
 	local cfg = self.configs[config]
-	cfg.dir   = configDir
+	cfg.dir   = path.normalize(configDir) .. "/"
 end
 
 function gmake:setConfigArgs(config, args)
@@ -29,10 +29,10 @@ function gmake:build()
 				targets = targets .. " "
 			end
 			targets  = targets .. target
-			dat.dir = data.path .. pkg:formatString(self.pathFmt, { targetname = target, targetdir = dat.path, config = config })
+			dat.dir = data.dir .. pkg:formatString(self.pathFmt, { targetname = target, targetdir = dat.path, config = config })
 		end
 		
-		if not os.executef("make -C %q -j %s %s", data.path, targets, data.args or "") then
+		if not os.executef("make -C %q -j %s %s", data.dir, targets, data.args or "") then
 			pkg:pkgError("Failed to build configuration '%s'", config)
 			goto CONTINUE
 		end
