@@ -187,7 +187,7 @@ function pkg:runBuildScript(repo, pack, version, args)
 	if not rerun and repo.api:supportsBuilt() then
 		io.writefile(string.format("%s/Bin/%s-%s.built", version.dir, os.host(), self.arch), "Built")
 	end
-	return succ
+	return succ and not rerun, not succ
 end
 
 function pkg:runScript(repo, pack, version, args)
@@ -242,8 +242,9 @@ function pkg:requirePackage(package_, isExt)
 		end
 		
 		if not version.built then
-			version.built = self:runBuildScript(repo, pack_, version, args)
-			if not version.built then return false end
+			local failed = false
+			version.built, failed = self:runBuildScript(repo, pack_, version, args)
+			if failed then return false end
 		end
 	end
 	self:runScript(repo, pack_, version, args)
