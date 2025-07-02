@@ -47,8 +47,6 @@ local function getHostArch()
 			local is64 = os.getenv("PROCESSOR_ARCHITEW6432")
 			if is64 then arch = is64 end
 		end
-	elseif os.host() == "macosx" then
-		arch = os.outputof("echo $HOSTTYPE")
 	else
 		arch = os.outputof("uname -m")
 	end

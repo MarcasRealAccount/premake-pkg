@@ -45,7 +45,7 @@ function premake:setup(wksName, arch, configs, dir, buildDir, outputDir, args)
 		end
 		for _, config in ipairs(configs) do
 			buildTool:setConfigDir(config, buildDir)
-			buildTool:setConfigArgs(config, string.format("config=%s_%s", config:lower(), arch:lower()))
+			buildTool:setConfigArgs(config, string.format("config=%s_%s", config:lower(), pkg.arch:lower()))
 		end
 	end
 	buildTool.pathFmt = outputDir
