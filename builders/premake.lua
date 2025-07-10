@@ -17,20 +17,30 @@ function premake:invokePremake(args)
 	return os.execute(cmd)
 end
 
-function premake:setup(wksName, arch, configs, dir, buildDir, outputDir)
+function premake:setup(wksName, arch, configs, dir, buildDir, outputDir, args)
 	dir             = dir .. "/"
 	buildDir        = path.getabsolute(buildDir, dir)
 	local buildTool = nil
 	if os.host() == "windows" then
 		buildTool    = builders.msbuild:new(configs, buildDir)
 		local action = string.format("vs%d", buildTool.vsVersion)
-		if not self:invokePremake(action) then
+
+		local premakeArgs = action
+		if args ~= nil then
+			premakeArgs = premakeArgs .. " " .. args
+		end
+		if not self:invokePremake(premakeArgs) then
 			pkg:pkgErrorFF("Failed to run premake")
 		end
 		buildTool:setSolution(string.format("%s/%s.sln", buildDir, wksName))
 	else
 		buildTool = builders.gmake:new(configs, buildDir)
-		if not self:invokePremake("gmake2") then
+
+		local premakeArgs = "gmake2"
+		if args ~= nil then
+			premakeArgs = premakeArgs .. " " .. args
+		end
+		if not self:invokePremake(premakeArgs) then
 			pkg:pkgErrorFF("Failed to run premake")
 		end
 		for _, config in ipairs(configs) do
