@@ -15,7 +15,11 @@ function cmake:setup(prjName, configs, dir, buildDir, args)
 		if not os.executef("cmake --log-level=ERROR -S %q -B %q -G %q %s", dir, buildDir, cmakeG, args) then
 			pkg:pkgErrorFF("Failed to run cmake")
 		end
-		buildTool:setSolution(string.format("%s/%s.sln", buildDir, prjName))
+		slnFmt = "%s/%s.sln"
+		if buildTool.vsVersion >= 2026 then
+			slnFmt = "%s/%s.slnx"
+		end
+		buildTool:setSolution(string.format(slnFmt, buildDir, prjName))
 		buildTool.pathFmt = "%{targetdir}/%{config}"
 	else
 		buildTool = builders.gmake:new(configs, buildDir)

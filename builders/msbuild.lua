@@ -16,12 +16,21 @@ end
 function msbuild:new(configs, buildDir)
 	local object = builders.generic.new(msbuild)
 	object:setup(configs, buildDir)
+
+	VERSION_MAPPINGS = {}
+	VERSION_MAPPINGS[18] = 2026
 	
-	object.msvcVersion = tonumber(vsWhere("-prerelease -latest -property catalog_productLine"):match("%d+"))
-	object.vsVersion   = tonumber(vsWhere("-prerelease -latest -property catalog_productLineVersion"))
-	object.path        = vsWhere("-prerelease -latest -property installationPath")
-	object.msbuild     = path.translate(path.normalize(object.path .. "\\MSBuild\\Current\\Bin\\MSBuild.exe"), "\\")
-	object.solution    = object.buildDir
+	tmpVersion = tonumber(vsWhere("-prerelease -latest -property catalog_productLineVersion"))
+	object.vsVersion = VERSION_MAPPINGS[tmpVersion]
+	if object.vsVersion == nil then
+		object.vsVersion = tmpVersion
+	end
+
+	object.msvcVersion   = tonumber(vsWhere("-prerelease -latest -property catalog_productLine"):match("%d+"))
+	object.path          = vsWhere("-prerelease -latest -property installationPath")
+	object.msbuild       = path.translate(path.normalize(object.path .. "\\MSBuild\\Current\\Bin\\MSBuild.exe"), "\\")
+	object.solution      = object.buildDir
+	object.premakeAction = string.format("vs%d", object.vsVersion)
 	return object
 end
 

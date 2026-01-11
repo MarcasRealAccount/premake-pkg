@@ -23,7 +23,7 @@ function premake:setup(wksName, arch, configs, dir, buildDir, outputDir, args)
 	local buildTool = nil
 	if os.host() == "windows" then
 		buildTool    = builders.msbuild:new(configs, buildDir)
-		local action = string.format("vs%d", buildTool.vsVersion)
+		local action = buildTool.premakeAction
 
 		local premakeArgs = action
 		if args ~= nil then
@@ -32,7 +32,11 @@ function premake:setup(wksName, arch, configs, dir, buildDir, outputDir, args)
 		if not self:invokePremake(premakeArgs) then
 			pkg:pkgErrorFF("Failed to run premake")
 		end
-		buildTool:setSolution(string.format("%s/%s.sln", buildDir, wksName))
+		if action == "vs2026" then
+			buildTool:setSolution(string.format("%s/%s.slnx", buildDir, wksName))
+		else
+			buildTool:setSolution(string.format("%s/%s.sln", buildDir, wksName))
+		end
 	else
 		buildTool = builders.gmake:new(configs, buildDir)
 
